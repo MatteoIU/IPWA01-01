@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="de" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CO2-Emissionen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body class="d-flex flex-column min-vh-100">
+    <!-- Navigationsleiste -->
+    <nav id="navbar" class="navbar navbar-expand-lg bg-body-tertiary" data-bs-theme="dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/Logo.png" width="90" height="90" alt="Logo">
+                    <span class="website-name">- Footprint</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                <div class="navbar-nav">
+                    <a class="nav-link" aria-current="page" href="/index.html">Home</a>
+                    <a class="nav-link" href="/ueberuns.html">Über Uns</a>
+                    <a class="nav-link" href="/impressum.html">Impressum</a>
+                </div>
+                </div>
+            </div>
+        </nav>
+        <!-- Sidebar -->
+        <div class="d-flex flex-grow-1">
+          <aside id="sidebar" class="p-3 bg-light">
+            <ul class="list-unstyled">
+              <li><a href="#navbar">Navigationsleiste</a></li>
+              <li><a href="#tabelle">CO2-Emissionstabelle</a></li>
+              <li><a href="#footer">Fußzeile</a></li>
+            </ul>
+          </aside>
+        <!-- main -->
+          <main class="p-4 flex-grow-1 container">
+            <h1>CO2-Emissionsdaten</h1>
+            <br>
+
+        <!-- Sortiern und Filtern Option-->
+         <div class="d-flex gap-2 mb-3">
+
+          <!-- filtern nach Land -->
+          <div class="dropdown">
+            <label for="filterCountry" class="form-label">Filtern nach Land:</label>
+            <select id="filterCountry" class="form-select">
+              <option value="">Alle</option>
+              <!-- Dynamisch gefüllt -->
+            </select>
+          </div>
+
+          <!-- filtern nach Unternhemen -->
+          <div class="dropdown">
+            <label for="filterCompany" class="form-label">Filtern nach Unternehmen:</label>
+            <select id="filterCompany" class="form-select">
+              <option value="">Alle</option>
+              <!-- Dynamisch gefüllt -->
+            </select>
+          </div>
+
+          <!-- sortieren nach dropdown -->
+            <div class="dropdown">
+              <label for="sortBy" class="form-label">Sortieren nach:</label>
+              <select id="sortBy" class="form-select">
+                <option value="">Keine Sortierung</option>
+                <option value="country">Land</option>
+                <option value="company">Unternehmen</option>
+                <option value="emissions-asc">Emissionen ↑ (aufsteigend)</option>
+                <option value="emissions-desc">Emissionen ↓ (absteigend)</option>
+              </select>
+            </div>
+
+        </div>
+
+
+        <!-- Tabelle -->
+            <table id="table" class="table">
+              <thead>
+                <tr>
+                  <th scope="col"></th>
+                  <th scope="col">Land</th>
+                  <th scope="col">Unternehmen</th>
+                  <th scope="col">t CO₂e / Jahr</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+               
+              </tbody>
+            </table>
+          </main>
+        </div>
+        <!-- Footer -->
+        <footer id="footer" class="footer bg-dark py-3 mt-auto">
+          <div class="container">
+            <div class="d-flex justify-content-between flex-wrap text-center text-md-start">
+              <span class="text-white-50">© 2025 CO₂-Transparenz-Projekt</span>
+              <a href="/impressum.html" class="text-white me-3 text-decoration-none">Impressum</a>
+              <a href="/ueberuns.html" class="text-white me-3 text-decoration-none">Über uns</a> 
+            </div>
+          </div>
+        </footer>
+    </body>
+    <!--Bootstrap Script-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+    <script>
+      // Sprache erkennen
+      const lang = navigator.language || navigator.userLanguage;
+
+      // Grundannahme: alles außer Arabisch, Hebräisch, Persisch = LTR
+      const rtlLanguages = ["ar", "he", "fa", "ur"];
+
+      const isRTL = rtlLanguages.some(code => lang.startsWith(code));
+      
+      // Sidebar positionieren je nach Sprache
+      const sidebar = document.getElementById("sidebar");
+        if (isRTL) {
+          sidebar.classList.add("order-last"); // Sidebar nach rechts
+        } else {
+          sidebar.classList.remove("order-last"); // Sidebar links (Standard)
+        }
+
+    </script>
+    <!-- Klimadatentabelle -->
+    <script src="/data.js"></script>
+
+    <!-- Script, welches Tabelle aus data.js erstellt-->
+    <script>
+  if (typeof emissionsData !== "undefined") {
+    const tableBody = document.getElementById("tableBody");
+    const countrySelect = document.getElementById("filterCountry");
+    const companySelect = document.getElementById("filterCompany");
+    const sortBySelect = document.getElementById("sortBy");
+
+    let filteredData = [...emissionsData]; // Arbeitskopie der Daten
+
+    // 1. Dropdowns mit eindeutigen Werten füllen
+    function populateDropdowns() {
+      const countries = [...new Set(emissionsData.map(row => row.country))];
+      const companies = [...new Set(emissionsData.map(row => row.company))];
+
+      countries.forEach(country => {
+        const option = document.createElement("option");
+        option.value = country;
+        option.textContent = country;
+        countrySelect.appendChild(option);
+      });
+
+      companies.forEach(company => {
+        const option = document.createElement("option");
+        option.value = company;
+        option.textContent = company;
+        companySelect.appendChild(option);
+      });
+    }
+
+    // 2. Tabelle zeichnen
+    function renderTable(data) {
+      tableBody.innerHTML = "";
+      data.forEach((row, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <th scope="row">${index + 1}</th>
+          <td>${row.country}</td>
+          <td>${row.company}</td>
+          <td>${row.emissions}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    // 3. Filter anwenden
+    function applyFilters() {
+      const selectedCountry = countrySelect.value;
+      const selectedCompany = companySelect.value;
+
+      filteredData = emissionsData.filter(row => {
+        const matchesCountry = selectedCountry === "" || row.country === selectedCountry;
+        const matchesCompany = selectedCompany === "" || row.company === selectedCompany;
+        return matchesCountry && matchesCompany;
+      });
+
+      applySort();
+    }
+
+    // 4. Sortieren anwenden
+    function applySort() {
+      const sortField = sortBySelect.value;
+
+      if (sortField === "country" || sortField === "company") {
+        filteredData.sort((a, b) =>
+          a[sortField].localeCompare(b[sortField], 'de', { sensitivity: 'base' })
+        );
+      }
+
+      else if (sortField === "emissions-asc") {
+        filteredData.sort((a, b) => a.emissions - b.emissions);
+      }
+
+      else if (sortField === "emissions-desc") {
+        filteredData.sort((a, b) => b.emissions - a.emissions);
+      }
+
+      renderTable(filteredData);
+    }
+
+    // 5. Events bei Auswahl
+    countrySelect.addEventListener("change", applyFilters);
+    companySelect.addEventListener("change", applyFilters);
+    sortBySelect.addEventListener("change", applySort);
+
+    // 6. Beim Start
+    populateDropdowns();
+    renderTable(emissionsData);
+  } else {
+    console.error("emissionsData nicht gefunden. Ist data.js korrekt eingebunden?");
+  }
+</script>
+  
+</html>
